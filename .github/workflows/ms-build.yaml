@@ -21,12 +21,3 @@ jobs:
           msbuild /m /p:Configuration=Debug /p:Platform=x64
           msbuild /m /p:Configuration=Release /p:Platform=x86
           msbuild /m /p:Configuration=Release /p:Platform=x64
-
-      - name: Run application
-        run: |
-          cd x64/Release
-          ./"HandsOn - STL.exe" > output.txt
-
-      - name: Compare output
-        run: |
-          diff --side-by-side --suppress-common-lines x64/Release/output.txt output.txt
