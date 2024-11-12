@@ -30,17 +30,14 @@ int main() {
     }
 
     for (auto& problem : problems) {
-        bool found = false;
-        for (auto& doctor : doctors)
-            if (problem.second == doctor.second) {
-                found = true;
-                break;
-            }
+        auto found_doctor = find_if(doctors.begin(), doctors.end(), [=](const pair<string, string> doctor) {
+            return problem.second == doctor.second;
+            });
 
-        if (found)
-            cout << problem.first << ' ' << "Acceptat" << '\n';
-        else
-            cout << problem.first << ' ' << "Respins" << '\n';
+        if (found_doctor != doctors.end()) {
+            cout << found_doctor->first << ' ' << problem.first << '\n';
+            doctors.erase(found_doctor);
+        }
     }
 
     return 0;
