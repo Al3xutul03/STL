@@ -2,27 +2,36 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <queue>
 
 using namespace std;
 
 class Problem {
 public:
     // Constructors
-    Problem(string& name, string& speciatly, int& duration);
+    Problem(const string& name, const string& speciatly, const int& duration, const int& severity_grade);
 
     // Getters
     inline string getName() const { return this->name; }
     inline string getSpecialty() const { return this->specialty; }
     inline int getDuration() const { return this->duration; }
+    inline int getSeverity() const { return this->severity_grade; }
+
+    // Operators
+    bool operator<(const Problem& other) const {
+        return this->severity_grade < other.severity_grade;
+    }
+
 private:
     string name;
     string specialty;
     int duration;
+    int severity_grade;
 };
 
 // Constructor with parameters
-Problem::Problem(string& name, string& speciatly, int& duration) :
-    name(name), specialty(speciatly), duration(duration) {};
+Problem::Problem(const string& name, const string& speciatly, const int& duration, const int& severity_grade) :
+    name(name), specialty(speciatly), duration(duration), severity_grade(severity_grade) {};
 
 class Doctor {
 public:
@@ -57,12 +66,12 @@ Doctor::Doctor(string& name, string& specialty, int hours_left = max_hours) :
     name(name), specialty(specialty), hours_left(hours_left), resolved_problems({}) {};
 
 int main() {
-    vector<Problem> problems;
+    priority_queue<Problem> problems;
     vector<Doctor> doctors;
 
-    ifstream inFile("input4_bonus.txt");
+    ifstream inFile("input.txt");
 
-    int no_problems, no_doctors, duration;
+    int no_problems, no_doctors, duration, severity_grade;
     string name, specialty;
 
     // Read problems
@@ -71,9 +80,9 @@ int main() {
         inFile >> name;
         inFile >> specialty;
         inFile >> duration;
-        Problem* new_problem = new Problem(name, specialty, duration);
-        problems.push_back(*new_problem);
-        delete new_problem;
+        inFile >> severity_grade;
+        Problem new_problem(name, specialty, duration, severity_grade);
+        problems.push(new_problem);
     }
 
     // Read doctors
@@ -81,13 +90,15 @@ int main() {
     for (int i = 0; i < no_doctors; i++) {
         inFile >> name;
         inFile >> specialty;
-        Doctor* new_doctor = new Doctor(name, specialty);
-        doctors.push_back(*new_doctor);
-        delete new_doctor;
+        Doctor new_doctor(name, specialty);
+        doctors.push_back(new_doctor);
     }
 
     // For each problem
-    for (auto& problem : problems) {
+    while (!problems.empty()) {
+        Problem problem = problems.top();
+        problems.pop();
+
         // Try to find the appropiate doctor that has enough time
         auto found_doctor = find_if(doctors.begin(), doctors.end(), [=](const Doctor& doctor) {
             return problem.getSpecialty() == doctor.getSpecialty() && doctor.getHoursLeft() >= problem.getDuration();
