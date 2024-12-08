@@ -69,7 +69,7 @@ int main() {
     priority_queue<Problem> problems;
     vector<Doctor> doctors;
 
-    ifstream inFile("input.txt");
+    ifstream inFile("input2.txt");
 
     int no_problems, no_doctors, duration, severity_grade;
     string name, specialty;
