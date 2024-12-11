@@ -151,7 +151,8 @@ int main() {
             found_doctor->addProblem(problem);
 
             // Decrease remaining time of the doctor
-            found_doctor->setHoursLeft(found_doctor->getHoursLeft() - problem.getDuration());
+            int relative_arrival_time = problem.getArrivalHour() - 9;
+            found_doctor->setHoursLeft(Doctor::getMaxHours() - relative_arrival_time - problem.getDuration());
         }
     }
 
