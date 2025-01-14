@@ -31,8 +31,7 @@ private:
 
 // Constructor with parameters
 Problem::Problem(const string& name, const string& speciatly, const int& arrival_hour, const int& duration, const int& severity_grade) :
-    name(name), specialty(speciatly), arrival_hour(arrival_hour), duration(duration), severity_grade(severity_grade) {
-}
+    name(name), specialty(speciatly), arrival_hour(arrival_hour), duration(duration), severity_grade(severity_grade) {}
 
 // Operator for prioritizing according to arrival hour and severity
 bool Problem::operator<(const Problem& other) const {
@@ -58,7 +57,7 @@ public:
     inline void setHoursLeft(const int& hours_left) { this->hours_left = hours_left; }
 
     // Methods
-    inline void addProblem(const Problem& problem) { resolved_problems.push_back(problem); }
+    inline void addProblem(const Problem& problem);
     bool hasSpecialty(const string& specialty) const;
     bool isAvailable(const Problem& problem) const;
 
@@ -73,8 +72,16 @@ private:
 
 // Constructor with parameters
 Doctor::Doctor(const string& name, const vector<string>& specialties, const int& hours_left = max_hours) :
-    name(name), specialties(specialties), hours_left(hours_left), resolved_problems({}) {
-};
+    name(name), specialties(specialties), hours_left(hours_left), resolved_problems({}) {}
+
+// Method for adding a problem to the doctor's list
+void Doctor::addProblem(const Problem& problem) {
+	this->resolved_problems.push_back(problem);
+
+    // Decrease remaining time of the doctor
+    int relative_arrival_time = problem.getArrivalHour() - 9;
+    this->setHoursLeft(Doctor::getMaxHours() - relative_arrival_time - problem.getDuration());
+}
 
 // Method for confirming that a doctor has a certain specialty
 bool Doctor::hasSpecialty(const string& specialty) const {
@@ -98,18 +105,22 @@ bool Doctor::isAvailable(const Problem& problem) const {
     if (relative_arrival_time + problem.getDuration() > Doctor::max_hours)
         return false;
 
-    // If no condition was passed, the problem can be solved
     return true;
 }
 
-int main() {
-    priority_queue<Problem> problems;
-    vector<Doctor> doctors;
+// Static class for I/O handling
+class IOHelper {
+public:
+    static void readInput(priority_queue<Problem>& problems, vector<Doctor>& doctors);
+    static void writeOutput(vector<Doctor>& doctors);
+};
 
+// Method for reading the input
+void IOHelper::readInput(priority_queue<Problem>& problems, vector<Doctor>& doctors) {
     ifstream inFile("input2.txt");
 
-    int no_problems, no_doctors, arrival_hour, duration, severity_grade, no_specialties;
     string name, specialty;
+    int no_problems, no_doctors, arrival_hour, duration, severity_grade, no_specialties;
 
     // Read problems
     inFile >> no_problems;
@@ -134,28 +145,10 @@ int main() {
         Doctor new_doctor(name, specialties);
         doctors.push_back(new_doctor);
     }
+}
 
-    // For each problem
-    while (!problems.empty()) {
-        Problem problem = problems.top();
-        problems.pop();
-
-        // Try to find the appropiate doctor that has enough time
-        auto found_doctor = find_if(doctors.begin(), doctors.end(), [=](const Doctor& doctor) {
-            return doctor.hasSpecialty(problem.getSpecialty()) && doctor.isAvailable(problem);
-            });
-
-        // If doctor is found
-        if (found_doctor != doctors.end()) {
-            // Add problem to the doctor's list
-            found_doctor->addProblem(problem);
-
-            // Decrease remaining time of the doctor
-            int relative_arrival_time = problem.getArrivalHour() - 9;
-            found_doctor->setHoursLeft(Doctor::getMaxHours() - relative_arrival_time - problem.getDuration());
-        }
-    }
-
+// Method for writing the output
+void IOHelper::writeOutput(vector<Doctor>& doctors) {
     // For each doctor
     for (auto& doctor : doctors) {
         const vector<Problem>* current_problems = doctor.getResolvedProblems();
@@ -169,11 +162,33 @@ int main() {
             }
             cout << '\n';
         }
-
-        // Delete the pointer to the current doctor's problems
-        current_problems = nullptr;
-        delete current_problems;
     }
+}
+
+int main() {
+    priority_queue<Problem> problems;
+    vector<Doctor> doctors;
+
+    IOHelper::readInput(problems, doctors);
+
+    // For each problem
+    while (!problems.empty()) {
+        Problem problem = problems.top();
+        problems.pop();
+
+        // Try to find the appropiate doctor that has enough time
+        auto found_doctor = find_if(doctors.begin(), doctors.end(), [=](const Doctor& doctor) {
+            return doctor.hasSpecialty(problem.getSpecialty()) && doctor.isAvailable(problem);
+            });
+
+		bool isDoctorAvailable = found_doctor != doctors.end();
+        if (isDoctorAvailable) {
+            // Add problem to the doctor's list
+            found_doctor->addProblem(problem);
+        }
+    }
+
+    IOHelper::writeOutput(doctors);
 
     return 0;
 }
